@@ -1,0 +1,23 @@
+{
+  "name": "multi-store-backend",
+  "version": "1.0.0",
+  "description": "It is server for multi store app",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon app.js"
+  },
+  "author": "Nakqeeb",
+  "license": "ISC",
+  "dependencies": {
+    "@mongoosejs/double": "^0.2.0",
+    "bcrypt": "^5.0.1",
+    "dotenv": "^16.0.1",
+    "express": "^4.18.1",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^6.4.1",
+    "mongoose-unique-validator": "^3.1.0",
+    "nodemon": "^2.0.18",
+    "socket.io": "^2.4.1"
+  }
+}

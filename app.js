@@ -9,6 +9,7 @@ const supplierRoutes = require('./routes/supplier');
 const productRoutes = require('./routes/product');
 const categoryRoutes = require('./routes/category');
 const cartRoutes = require('./routes/cart');
+const orderRoutes = require('./routes/order');
 
 app.use(express.json());
 
@@ -24,6 +25,7 @@ app.use('/suppliers', supplierRoutes);
 app.use('/products', productRoutes);
 app.use('/categories', categoryRoutes);
 app.use('/carts', cartRoutes);
+app.use('/orders', orderRoutes);
 // app.use('/users', userRoutes);
 
 mongoose.connect('mongodb+srv://nakqeeb:' + process.env.MONGO_ATLAS_PW + '@cluster0.rbc72.mongodb.net/multi-store-app').then(() => {

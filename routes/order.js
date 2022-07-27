@@ -1,0 +1,96 @@
+const express = require('express');
+
+const router = express.Router();
+const isAuth = require('../middleware/is-auth');
+
+const Cart = require('../models/cart');
+const Order = require('../models/order');
+const Product = require('../models/product');
+
+
+router.post('/', isAuth, async (req, res, next) => {
+    const customerId = req.userId || req.body.customer;
+    const productId = req.body.product;
+    const supplierId = req.userId || req.body.supplier;
+    const orderQuantity = +req.body.orderQuantity
+    try {
+        const order = new Order({
+            customer: customerId,
+            product: productId,
+            supplier: supplierId,
+            orderQuantity: orderQuantity,
+            orderPrice: +req.body.orderPrice,
+            deliveryStatus: req.body.deliveryStatus,
+            deliveryDate: req.body.deliveryDate,
+            orderDate: req.body.orderDate,
+            paymentStatus: req.body.paymentStatus,
+            orderReview: req.body.orderReview
+        });
+        const addedorder = await order.save();
+        if (!addedorder) {
+            const error = new Error("Order can not be placed.");
+            error.statusCode = 401;
+            throw error;
+        }
+        /* io.getIO().emit('products', {
+            action: 'create',
+            product: addedorder
+          }); */ // 'products' is channel or event name. It could be any name. | (action) key is not required, you can set any data you want. we will use action key in the frontend code to check for create event
+        const updatedProduct = await Product.updateOne({ _id: productId }, { "$inc": { "inStock": -orderQuantity } });
+        if (!updatedProduct) {
+            const error = new Error("Product stock quantity can not be updated.");
+            error.statusCode = 401;
+            throw error;
+        }
+
+        res.status(200).json({
+            order: addedorder,
+            success: true
+        });
+    } catch (err) {
+        // console.log(err);
+        if (!err.statusCode) {
+            return res.status(401).json({
+                message: "Unauthorized access.",
+                success: false
+            });
+        }
+        return res.status(err.statusCode).json({
+            message: err.message,
+            success: false
+        });
+    }
+
+});
+
+
+router.get('/', isAuth, (req, res, next) => {
+    Order.find({ $or: [{ customer: req.userId }, { supplier: req.userId }] }).select('-__v').populate('customer', '-password -cart -__v').populate('supplier', '-password -__v').populate('product', '-__v').then(orders => {
+        if (!orders) {
+            const error = new Error("Can not fetch the orders.");
+            error.statusCode = 401;
+            throw error;
+        }
+        res.status(200).json({
+            orders: orders,
+            success: true
+        });
+    }).catch(err => {
+        // console.log(err);
+        if (!err.statusCode) {
+            return res.status(401).json({
+                message: "Unauthorized access.",
+                success: false
+            });
+        }
+        return res.status(err.statusCode).json({
+            message: err.message,
+            success: false
+        });
+    });
+});
+
+
+
+
+module.exports = router;

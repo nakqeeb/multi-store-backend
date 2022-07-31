@@ -93,15 +93,17 @@ router.get('/', isAuth, (req, res, next) => {
 
 
 router.put('/:orderId', isAuth, async (req, res, next) => {
-    var orderId = req.params.orderId;
+    const orderId = req.params.orderId;
+    const deliveryStatus = req.body.deliveryStatus;
     try {
-        /* var order = await Order.findById(orderId);
+        var order = await Order.findById(orderId);
         if (!order) {
             const error = new Error("Could not find the order.");
             error.statusCode = 404;
             throw error;
-        } */
-        var result = await Order.updateOne({ _id: orderId }, { deliveryStatus: 'shipping', deliveryDate: req.body.deliveryDate });
+        }
+        const deliveryDate = order.deliveryDate == null? req.body.deliveryDate : order.deliveryDate;
+        var result = await Order.updateOne({ _id: orderId }, { deliveryStatus: deliveryStatus, deliveryDate: deliveryDate });
         //console.log('Here is result: ', result);
         if (result.matchedCount > 0) {
             // fetch order here in order to emit it with socket io

@@ -102,7 +102,7 @@ router.put('/:orderId', isAuth, async (req, res, next) => {
             error.statusCode = 404;
             throw error;
         }
-        const deliveryDate = order.deliveryDate == null? req.body.deliveryDate : order.deliveryDate;
+        const deliveryDate = order.deliveryDate == null ? req.body.deliveryDate : order.deliveryDate;
         var result = await Order.updateOne({ _id: orderId }, { deliveryStatus: deliveryStatus, deliveryDate: deliveryDate });
         //console.log('Here is result: ', result);
         if (result.matchedCount > 0) {
@@ -118,6 +118,51 @@ router.put('/:orderId', isAuth, async (req, res, next) => {
                 order: order
             });
             return res.status(200).json({ message: 'Delivery date is updated successfully.', success: true });
+        } else {
+            const error = new Error("Could not update the order.");
+            error.statusCode = 404;
+            throw error;
+        }
+    } catch (error) {
+        //console.log('error is here: ',error);
+        if (!error.statusCode) {
+            return res.status(401).json({
+                message: "Unauthorized access.",
+                success: false
+            });
+        }
+        return res.status(500).json({
+            message: error.message,
+            success: false
+        });
+    }
+});
+
+
+router.put('/orderreview/:orderId', isAuth, async (req, res, next) => {
+    const orderId = req.params.orderId;
+    const orderReview = req.body.orderReview;
+    try {
+        var order = await Order.findById(orderId);
+        if (!order) {
+            const error = new Error("Could not find the order.");
+            error.statusCode = 404;
+            throw error;
+        }
+        var result = await Order.updateOne({ _id: orderId }, { orderReview: orderReview });
+        if (result.matchedCount > 0) {
+            // fetch order here in order to emit it with socket io
+            var order = await Order.findById(orderId).select('-__v').populate('customer', '-password -cart -__v').populate('supplier', '-password -__v').populate('product', '-__v');
+            if (!order) {
+                const error = new Error("Could not find the order.");
+                error.statusCode = 404;
+                throw error;
+            }
+            io.getIO().emit('orders', {
+                action: 'updateOrder',
+                order: order
+            });
+            return res.status(200).json({ message: 'orderReview udated successfully.', success: true });
         } else {
             const error = new Error("Could not update the order.");
             error.statusCode = 404;

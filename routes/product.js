@@ -20,6 +20,11 @@ router.post('/', isAuth, (req, res, next) => {
         supplier: req.userId
     });
     product.save().then(addedProduct => {
+        if (!addedProduct) {
+            const error = new Error("Could not add the product.");
+            error.statusCode = 500;
+            throw error;
+        }
         io.getIO().emit('products', {
             action: 'create',
             product: addedProduct
@@ -28,9 +33,15 @@ router.post('/', isAuth, (req, res, next) => {
             product: addedProduct,
             success: true
         });
-    }).catch(error => {
-        res.status(500).json({
-            message: 'Could not add the product.',
+    }).catch(err => {
+        if (!err.statusCode) {
+            return res.status(401).json({
+                message: "Unauthorized access.",
+                success: false
+            });
+        }
+        return res.status(err.statusCode).json({
+            message: err.message,
             success: false
         });
     });

@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const uniqueValidator = require('mongoose-unique-validator');
+const Address = require('./address').schema;
 
 const customerSchema = new mongoose.Schema(
   {
@@ -22,10 +23,6 @@ const customerSchema = new mongoose.Schema(
       required: true,
     },
     phone: {
-      type: String,
-      default: ''
-    },
-    address: {
       type: String,
       default: ''
     },
@@ -89,7 +86,7 @@ customerSchema.methods.reduceQuantityByOne = function (product) {
       quantity: newQuantity
     });
   }
-  
+
   const updatedCart = {
     items: updatedCartItems
   };

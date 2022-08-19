@@ -191,6 +191,41 @@ router.put('/:productId', isAuth, async (req, res, next) => {
             return res.status(200).json({ message: 'Product updated successfully.', success: true });
         } else {
             const error = new Error("Could not update the product.");
+            error.statusCode = 500;
+            throw error;
+        }
+    } catch (err) {
+        if (!err.statusCode) {
+            return res.status(401).json({
+                message: "Unauthorized access.",
+                success: false
+            });
+        }
+        return res.status(err.statusCode).json({
+            message: err.message,
+            success: false
+        });
+    }
+});
+
+
+router.delete('/:productId', isAuth, async (req, res, next) => {
+    const productId = req.params.productId;
+    try {
+        const product = await Product.findById(productId);
+        if (!product) {
+            const error = new Error('Product is not found');
+            error.statusCode = 404;
+            throw error;
+        }
+        const result = await Product.deleteOne({ _id: productId, supplier: req.userId });
+        if (result.deletedCount > 0) {
+            io.getIO().emit('products', {
+                action: 'delete',
+              }); 
+            return res.status(200).json({ message: 'Deletion successful!', success: true });
+        } else {
+            const error = new Error('Not Authorized.');
             error.statusCode = 404;
             throw error;
         }

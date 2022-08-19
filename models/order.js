@@ -16,6 +16,18 @@ const orderSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: "Supplier",
         },
+        productName: {
+            type: String,
+            required: true
+        },
+        productImage: {
+            type: String,
+            required: true
+        },
+        productPrice: {
+            type: mongoose.Schema.Types.Double, // Thanks to the '@mongoosejs/double' plugin
+            required: true
+        },
         orderQuantity: {
             type: Number,
             required: true

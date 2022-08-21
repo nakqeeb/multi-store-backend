@@ -4,17 +4,21 @@ require('@mongoosejs/double'); //plugin to support Double in mongoose. To instal
 
 const orderSchema = new mongoose.Schema(
     {
-        customer: {
+        customerId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Customer",
         },
-        product: {
+        productId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Product",
         },
-        supplier: {
+        supplierId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Supplier",
+        },
+        addressId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Address",
         },
         productName: {
             type: String,

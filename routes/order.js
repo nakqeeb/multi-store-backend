@@ -10,15 +10,17 @@ const Product = require('../models/product');
 
 
 router.post('/', isAuth, async (req, res, next) => {
-    const customerId = req.userId || req.body.customer;
-    const productId = req.body.product;
-    const supplierId = req.body.supplier;
+    const customerId = req.userId || req.body.customerId;
+    const productId = req.body.productId;
+    const supplierId = req.body.supplierId;
+    const addressId = req.body.addressId;
     const orderQuantity = +req.body.orderQuantity
     try {
         const order = new Order({
-            customer: customerId,
-            product: productId,
-            supplier: supplierId,
+            customerId: customerId,
+            productId: productId,
+            supplierId: supplierId,
+            addressId:addressId,
             productName: req.body.productName,
             productImage: req.body.productImage,
             productPrice: +req.body.productPrice,
@@ -69,7 +71,7 @@ router.post('/', isAuth, async (req, res, next) => {
 
 
 router.get('/', isAuth, (req, res, next) => {
-    Order.find({ $or: [{ customer: req.userId }, { supplier: req.userId }] }).select('-__v').populate('customer', '-password -cart -__v').populate('supplier', '-password -__v').populate('product', '-__v').then(orders => {
+    Order.find({ $or: [{ customerId: req.userId }, { supplierId: req.userId }] }).select('-__v').populate('customerId', '-password -cart -__v').populate('supplierId', '-password -__v').populate('addressId', '-__v').populate('productId', '-__v').then(orders => {
         if (!orders) {
             const error = new Error("Can not fetch the orders.");
             error.statusCode = 401;
@@ -110,7 +112,7 @@ router.put('/:orderId', isAuth, async (req, res, next) => {
         //console.log('Here is result: ', result);
         if (result.matchedCount > 0) {
             // fetch order here in order to emit it with socket io
-            var order = await Order.findById(orderId).select('-__v').populate('customer', '-password -cart -__v').populate('supplier', '-password -__v').populate('product', '-__v');
+            var order = await Order.findById(orderId).select('-__v').populate('customerId', '-password -cart -__v').populate('supplierId', '-password -__v').populate('addressId', '-__v').populate('productId', '-__v');
             if (!order) {
                 const error = new Error("Could not find the order.");
                 error.statusCode = 404;
@@ -155,7 +157,7 @@ router.put('/orderreview/:orderId', isAuth, async (req, res, next) => {
         var result = await Order.updateOne({ _id: orderId }, { orderReview: orderReview });
         if (result.matchedCount > 0) {
             // fetch order here in order to emit it with socket io
-            var order = await Order.findById(orderId).select('-__v').populate('customer', '-password -cart -__v').populate('supplier', '-password -__v').populate('product', '-__v');
+            var order = await Order.findById(orderId).select('-__v').populate('customerId', '-password -cart -__v').populate('supplierId', '-password -__v').populate('addressId', '-__v').populate('productId', '-__v');
             if (!order) {
                 const error = new Error("Could not find the order.");
                 error.statusCode = 404;

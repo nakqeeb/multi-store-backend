@@ -12,14 +12,14 @@ const Address = require('../models/address');
 router.post('/', isAuth, async (req, res, next) => {
     try {
         const address = new Address({
-                customerId: req.userId,
-                name: req.body.name,
-                phone: req.body.phone,
-                pincode: req.body.pincode,
-                address: req.body.address,
-                landmark: req.body.landmark,
-                city: req.body.city,
-                state: req.body.state,
+            customerId: req.userId,
+            name: req.body.name,
+            phone: req.body.phone,
+            pincode: req.body.pincode,
+            address: req.body.address,
+            landmark: req.body.landmark,
+            city: req.body.city,
+            state: req.body.state,
         });
         const addedAddress = await address.save();
         if (!addedAddress) {
@@ -96,9 +96,50 @@ router.get('/', isAuth, async (req, res, next) => {
             error.statusCode = 404;
             throw error;
         }
-        const addresses = await Address.find({customerId: customerId});
+        const addresses = await Address.find({ customerId: customerId });
+
+        if (!addresses) {
+            const error = new Error("Addresses Not Found.");
+            error.statusCode = 404;
+            throw error;
+        }
 
         return res.status(200).json({ addresses: addresses, success: true });
+
+    } catch (err) {
+        if (!err.statusCode) {
+            return res.status(401).json({
+                message: "Unauthorized access.",
+                success: false
+            });
+        }
+        return res.status(err.statusCode).json({
+            message: err.message,
+            success: false
+        });
+    }
+});
+
+// get a single address
+router.get('/:addressId', isAuth, async (req, res, next) => {
+    const addressId = req.params.addressId;
+    const customerId = req.userId;
+    try {
+        const customer = await Customer.findById(customerId);
+        if (!customer) {
+            const error = new Error("Customer Not Found.");
+            error.statusCode = 404;
+            throw error;
+        }
+        const address = await Address.findOne({ _id: addressId, customerId: customerId });
+
+        if (!address) {
+            const error = new Error("Address Not Found.");
+            error.statusCode = 404;
+            throw error;
+        }
+
+        return res.status(200).json({ address: address, success: true });
 
     } catch (err) {
         if (!err.statusCode) {

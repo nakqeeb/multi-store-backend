@@ -16,9 +16,36 @@ const orderSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: "Supplier",
         },
-        addressId: {
+        /* addressId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Address",
+        }, */
+        name: {
+            type: String,
+            required: true,
+        },
+        phone: {
+            type: String,
+            required: true,
+        }, 
+        pincode: {
+            type: String,
+            required: true,
+        },
+        address: {
+            type: String,
+            required: true,
+        },
+        landmark: {
+            type: String,
+        },
+        city: {
+            type: String,
+            required: true,
+        },
+        state: {
+            type: String,
+            required: true,
         },
         productName: {
             type: String,

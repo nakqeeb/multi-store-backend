@@ -41,7 +41,7 @@ router.post('', isAuth, async (req, res, next) => {
 // fetch all reviews
 router.get('/', async (req, res, next) => {
     try {
-        const reviews = await Review.find().populate('customerId', '-password -cart -__v');
+        const reviews = await Review.find().populate('customerId', '-password -cart -wishlist -__v');
         if (!reviews) {
             const error = new Error("Could not fetch the reviews.");
             error.statusCode = 500;
@@ -69,7 +69,7 @@ router.get('/', async (req, res, next) => {
 router.get('/:prodId', async (req, res, next) => {
     const productId = req.params.prodId;
     try {
-        const reviews = await Review.find({productId: productId}).populate('customerId', '-password -cart -__v');
+        const reviews = await Review.find({productId: productId}).populate('customerId', '-password -cart -wishlist -__v');
         if (!reviews) {
             const error = new Error("Could not fetch the reviews for the current product.");
             error.statusCode = 500;
@@ -98,7 +98,7 @@ router.get('/:prodId', async (req, res, next) => {
 router.get('/customer', isAuth ,async (req, res, next) => {
     const customerId = req.userId;
     try {
-        const reviews = await Review.find({customerId: customerId}).populate('customerId', '-password -cart -__v');
+        const reviews = await Review.find({customerId: customerId}).populate('customerId', '-password -cart -wishlist -__v');
         if (!reviews) {
             const error = new Error("Could not fetch the reviews for the current customer.");
             error.statusCode = 500;

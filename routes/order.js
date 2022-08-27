@@ -78,7 +78,7 @@ router.post('/', isAuth, async (req, res, next) => {
 
 
 router.get('/', isAuth, (req, res, next) => {
-    Order.find({ $or: [{ customerId: req.userId }, { supplierId: req.userId }] }).select('-__v').populate('customerId', '-password -cart -__v').populate('supplierId', '-password -__v').populate('productId', '-__v').then(orders => {
+    Order.find({ $or: [{ customerId: req.userId }, { supplierId: req.userId }] }).select('-__v').populate('customerId', '-password -cart -wishlist -__v').populate('supplierId', '-password -__v').populate('productId', '-__v').then(orders => {
         if (!orders) {
             const error = new Error("Can not fetch the orders.");
             error.statusCode = 401;
@@ -119,7 +119,7 @@ router.put('/:orderId', isAuth, async (req, res, next) => {
         //console.log('Here is result: ', result);
         if (result.matchedCount > 0) {
             // fetch order here in order to emit it with socket io
-            var order = await Order.findById(orderId).select('-__v').populate('customerId', '-password -cart -__v').populate('supplierId', '-password -__v').populate('productId', '-__v');
+            var order = await Order.findById(orderId).select('-__v').populate('customerId', '-password -cart -wishlist -__v').populate('supplierId', '-password -__v').populate('productId', '-__v');
             if (!order) {
                 const error = new Error("Could not find the order.");
                 error.statusCode = 404;
@@ -164,7 +164,7 @@ router.put('/orderreview/:orderId', isAuth, async (req, res, next) => {
         var result = await Order.updateOne({ _id: orderId }, { orderReview: orderReview });
         if (result.matchedCount > 0) {
             // fetch order here in order to emit it with socket io
-            var order = await Order.findById(orderId).select('-__v').populate('customerId', '-password -cart -__v').populate('supplierId', '-password -__v').populate('productId', '-__v');
+            var order = await Order.findById(orderId).select('-__v').populate('customerId', '-password -cart -wishlist -__v').populate('supplierId', '-password -__v').populate('productId', '-__v');
             if (!order) {
                 const error = new Error("Could not find the order.");
                 error.statusCode = 404;

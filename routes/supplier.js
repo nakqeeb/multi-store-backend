@@ -60,7 +60,7 @@ router.post('/login', (req, res, next) => {
             fetchedUser = user;
             return bcrypt.compare(req.body.password, user.password);
         })
-        .then((isMatched) => {
+        .then(async (isMatched) => {
             if (!isMatched) {
                 const error = new Error("Wrong password provided for that user.");
                 error.statusCode = 401;
@@ -74,12 +74,20 @@ router.post('/login', (req, res, next) => {
             );
             fetchedUser = fetchedUser.toObject(); // this to delete password field from fetchedUser before we send the response to the client
             delete fetchedUser.password;
-            res.status(200).json({
-                token: token,
-                // expiresIn: 43800,
-                supplier: fetchedUser,
-                success: true
-            });
+            // update supplier FCM token device 
+            const result = await Supplier.updateOne({ _id: fetchedUser._id }, { fcmToken: req.body.fcmToken });
+            if (result.matchedCount > 0) {
+                return res.status(200).json({
+                    token: token,
+                    // expiresIn: 43800,
+                    supplier: fetchedUser,
+                    success: true
+                });
+            } else {
+                const error = new Error("Could not get the FCM token.");
+                error.statusCode = 401;
+                throw error;
+            }
         })
         .catch((err) => {
             if (!err.statusCode) {

@@ -27,6 +27,9 @@ const supplierSchema = new mongoose.Schema(
         phone: {
             type: String,
         },
+        fcmToken: {
+            type: String,
+        },
         isActivated: {
             type: Boolean,
             default: false

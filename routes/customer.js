@@ -64,7 +64,7 @@ router.post('/login', (req, res, next) => {
             fetchedUser = user;
             return bcrypt.compare(req.body.password, user.password);
         })
-        .then((isMatched) => {
+        .then(async (isMatched) => {
             if (!isMatched) {
                 const error = new Error("Wrong password provided for that user.");
                 error.statusCode = 401;
@@ -78,12 +78,20 @@ router.post('/login', (req, res, next) => {
             );
             fetchedUser = fetchedUser.toObject(); // this to delete password field from fetchedUser before we send the response to the client
             delete fetchedUser.password;
-            res.status(200).json({
-                token: token,
-                // expiresIn: 43800,
-                customer: fetchedUser,
-                success: true
-            });
+            // update supplier FCM token device 
+            const result = await Customer.updateOne({ _id: fetchedUser._id }, { fcmToken: req.body.fcmToken });
+            if (result.matchedCount > 0) {
+                return res.status(200).json({
+                    token: token,
+                    // expiresIn: 43800,
+                    customer: fetchedUser,
+                    success: true
+                });
+            } else {
+                const error = new Error("Could not get the FCM token.");
+                error.statusCode = 401;
+                throw error;
+            }
         })
         .catch((err) => {
             if (!err.statusCode) {
@@ -97,6 +105,33 @@ router.post('/login', (req, res, next) => {
                 success: false
             });
         });
+});
+
+// fetch customer by id
+router.get('/:customerId', (req, res, next) => {
+    const customerId = req.params.customerId;
+    Customer.findById(customerId).select('-password -__v').then((customer) => {
+        if (!customer) {
+            const error = new Error("Could not fetch the customer.");
+            error.statusCode = 500;
+            throw error;
+        }
+        res.status(200).json({
+            customer: customer,
+            success: true
+        });
+    }).catch(err => {
+        if (!err.statusCode) {
+            return res.status(401).json({
+                message: "Unauthorized access.",
+                success: false
+            });
+        }
+        return res.status(err.statusCode).json({
+            message: err.message,
+            success: false
+        });
+    });
 });
 
 
@@ -120,7 +155,7 @@ router.put('/resetpassword', isAuth, async (req, res) => {
 
         }
         const newHashedPassword = await bcrypt.hash(newPassword, 10);
-        const result = await Customer.updateOne({_id: customerId}, {password: newHashedPassword});
+        const result = await Customer.updateOne({ _id: customerId }, { password: newHashedPassword });
         if (result.matchedCount > 0) {
             return res.status(200).json({ message: 'Password updated successfully.', success: true });
         } else {
@@ -153,7 +188,7 @@ router.put('/phone', isAuth, async (req, res, next) => {
             error.statusCode = 404;
             throw error;
         }
-        const result = await Customer.updateOne({ _id: customerId }, {phone: phone});
+        const result = await Customer.updateOne({ _id: customerId }, { phone: phone });
         if (result.matchedCount > 0) {
             return res.status(200).json({ message: 'Phone updated successfully.', success: true });
         } else {
@@ -177,7 +212,7 @@ router.put('/phone', isAuth, async (req, res, next) => {
 
 
 // add to Wishlist
-router.put('/wishlist', isAuth, async (req, res, next) => {
+router.put('/specific/wishlist', isAuth, async (req, res, next) => {
     const customerId = req.userId;
     const productId = req.body.productId;
     const prodId = {
@@ -236,7 +271,8 @@ router.put('/wishlist', isAuth, async (req, res, next) => {
 
 
 // get wishlist associated to a specific customer 
-router.get('/wishlist', isAuth, async (req, res, next) => {
+// I added 'specific' word to the endpoint to avoid the error since I use two get methods with '/customers' (one to fetch customer by id and another to get the wishlist customer)
+router.get('/specific/wishlist', isAuth, async (req, res, next) => {
     const customerId = req.userId;
     try {
         const customer = await Customer.findById(customerId).select('-_id -password -email -name -profileImageUrl -phone -cart -createdAt -updatedAt -__v').populate('wishlist');
@@ -266,7 +302,7 @@ router.get('/wishlist', isAuth, async (req, res, next) => {
 
 
 // get a single item from wishlist associated to a specific customer 
-router.get('/wishlist/:productId', isAuth, async (req, res, next) => {
+router.get('/specific/wishlist/:productId', isAuth, async (req, res, next) => {
     const productId = req.params.productId;
     const customerId = req.userId;
     try {
@@ -312,7 +348,7 @@ router.get('/wishlist/:productId', isAuth, async (req, res, next) => {
 
 
 // remove from wishlist
-router.delete('/wishlist/:productId', isAuth, async (req, res, next) => {
+router.delete('/specific/wishlist/:productId', isAuth, async (req, res, next) => {
     const productId = req.params.productId;
     const customerId = req.userId;
 

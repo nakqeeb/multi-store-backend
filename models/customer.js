@@ -26,6 +26,9 @@ const customerSchema = new mongoose.Schema(
       type: String,
       default: ''
     },
+    fcmToken: {
+        type: String,
+    },
     cart: {
       items: [
         {

@@ -110,7 +110,7 @@ router.post('/login', (req, res, next) => {
 // fetch customer by id
 router.get('/:customerId', (req, res, next) => {
     const customerId = req.params.customerId;
-    Customer.findById(customerId).select('-password -__v').then((customer) => {
+    Customer.findById(customerId).select('-password -__v').populate('cart.items.productId').then((customer) => {
         if (!customer) {
             const error = new Error("Could not fetch the customer.");
             error.statusCode = 500;

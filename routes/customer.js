@@ -210,6 +210,7 @@ router.put('/phone', isAuth, async (req, res, next) => {
     }
 });
 
+// -----------------------------------------------------------
 
 // add to Wishlist
 router.put('/specific/wishlist', isAuth, async (req, res, next) => {
@@ -240,7 +241,7 @@ router.put('/specific/wishlist', isAuth, async (req, res, next) => {
             await customer.save(); */
             return res.status(401).json({
                 message: "Could not add the product to wishlist.",
-                success: true // in this case I need to set it to true
+                success: true // in this case I need to set it to true which means that the product is already in the list
             });
         }
         const result = await Customer.updateOne({ _id: customerId }, { "$push": { wishlist: productId } });
@@ -275,7 +276,7 @@ router.put('/specific/wishlist', isAuth, async (req, res, next) => {
 router.get('/specific/wishlist', isAuth, async (req, res, next) => {
     const customerId = req.userId;
     try {
-        const customer = await Customer.findById(customerId).select('-_id -password -email -name -profileImageUrl -phone -cart -createdAt -updatedAt -__v').populate('wishlist');
+        const customer = await Customer.findById(customerId).select('-_id -password -email -name -profileImageUrl -phone -cart -followingStores -createdAt -updatedAt -__v').populate('wishlist');
         if (!customer) {
             const error = new Error("Customer Not Found.");
             error.statusCode = 404;
@@ -362,6 +363,115 @@ router.delete('/specific/wishlist/:productId', isAuth, async (req, res, next) =>
         const result = await Customer.updateOne({ _id: customerId }, { $pull: { wishlist: productId } });
         if (result.matchedCount > 0) {
             io.getIO().emit('wishlist', {
+                action: 'remove',
+            });
+            return res.status(200).json({ message: 'Deletion successful!', success: true });
+        } else {
+            const error = new Error('Not Authorized.');
+            error.statusCode = 401;
+            throw error;
+        }
+    } catch (err) {
+        if (!err.statusCode) {
+            return res.status(401).json({
+                message: "Unauthorized access.",
+                success: false
+            });
+        }
+        return res.status(err.statusCode).json({
+            message: err.message,
+            success: false
+        });
+    }
+});
+
+// -----------------------------------------------------------
+
+// add to followingStores
+router.put('/specific/followingstores', isAuth, async (req, res, next) => {
+    const customerId = req.userId;
+    const supplierId = req.body.supplierId;
+    try {
+        const customer = await Customer.findById(customerId);
+        if (!customer) {
+            const error = new Error("Customer Not Found.");
+            error.statusCode = 404;
+            throw error;
+        }
+        if (customer.followingStores.includes(supplierId)) {
+            return res.status(401).json({
+                message: "Could not add the product to wishlist.",
+                success: true // in this case I need to set it to true which means that the store is already followed
+            });
+        }
+        const result = await Customer.updateOne({ _id: customerId }, { "$push": { followingStores: supplierId } });
+
+        if (result.matchedCount > 0) {
+            return res.status(200).json({ message: 'Store is followed successfully.', success: true });
+        } else {
+            const error = new Error("Could not follow the store.");
+            error.statusCode = 404;
+            throw error;
+        }
+    } catch (err) {
+        if (!err.statusCode) {
+            return res.status(401).json({
+                message: "Unauthorized access.",
+                success: false
+            });
+        }
+        return res.status(err.statusCode).json({
+            message: err.message,
+            success: false
+        });
+    }
+});
+
+// get followingStores (following suppliers) associated to a specific customer 
+router.get('/specific/followingstores', isAuth, async (req, res, next) => {
+    const customerId = req.userId;
+    try {
+        const customer = await Customer.findById(customerId).select('-_id -password -email -name -profileImageUrl -phone -cart -wishlist -createdAt -updatedAt -__v').populate('followingStores');
+        if (!customer) {
+            const error = new Error("Customer Not Found.");
+            error.statusCode = 404;
+            throw error;
+        }
+        return res.status(200).json({
+            customer: customer,
+            success: true
+        });
+
+    } catch (err) {
+        if (!err.statusCode) {
+            return res.status(401).json({
+                message: "Unauthorized access.",
+                success: false
+            });
+        }
+        return res.status(err.statusCode).json({
+            message: err.message,
+            success: false
+        });
+    }
+});
+
+
+// remove from followingStores (following suppliers)
+router.delete('/specific/followingstores/:supplierId', isAuth, async (req, res, next) => {
+    const supplierId = req.params.supplierId;
+    const customerId = req.userId;
+
+    try {
+        const customer = await Customer.findById(customerId);
+        if (!customer) {
+            const error = new Error('Customer Not Found.');
+            error.statusCode = 404;
+            throw error;
+        }
+        const result = await Customer.updateOne({ _id: customerId }, { $pull: { followingStores: supplierId } });
+        if (result.matchedCount > 0) {
+            io.getIO().emit('followingstores', {
                 action: 'remove',
             });
             return res.status(200).json({ message: 'Deletion successful!', success: true });

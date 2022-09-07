@@ -27,7 +27,7 @@ const customerSchema = new mongoose.Schema(
       default: ''
     },
     fcmToken: {
-        type: String,
+      type: String,
     },
     cart: {
       items: [
@@ -42,14 +42,23 @@ const customerSchema = new mongoose.Schema(
       ]
     },
     wishlist: [
-        
-          {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Product',
-            required: true,
-          },
-        
-      ]
+
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Product',
+        required: true,
+      },
+
+    ],
+    followingStores: [
+
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Supplier',
+        required: true,
+      },
+
+    ]
   },
   { timestamps: true }
 );
